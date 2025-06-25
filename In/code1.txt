@@ -1,0 +1,464 @@
+<html><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP2 Admin Système - Corrigé.md</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css">
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="exercice-1---variables-denvironnement">Exercice 1 - Variables d’environnement</h1>
+<ol>
+<li>
+<p>Les commandes tapées par l’utilisateur (outre les commandes internes de Bash, dont la liste peut être consultée en tapant <code>help</code>), sont localisées dans les dossiers spécifiés par la variable d’environnement <code>PATH</code>, et donc visibles en tapant <code>echo $PATH</code>.</p>
+</li>
+<li>
+<p><code>$HOME</code></p>
+</li>
+<li>
+<ul>
+<li><code>LANG</code> : variable permettant de spécifier une <em>locale</em>, c’est-à-dire des paramètres régionaux</li>
+<li><code>PWD</code> : dossier courant (<em>Path Working Directory</em>)</li>
+<li><code>OLDPWD</code> : dossier courant précédent (utilisé quand on tape <code>cd -</code> pour nous ramener dans le dossier dans lequel nous nous trouvions précédemment)</li>
+<li><code>SHELL</code> : l’interpréteur de commandes courant</li>
+</ul>
+</li>
+<li>
+<p><code>MY_VAR = foo</code> ; <code>echo $MY_VAR</code>.</p>
+</li>
+<li>
+<p>Quand on saisit la commande <code>bash</code>, on ouvre un “sous-shell” ou “shell fils” à l’intérieur de celui dans lequel on se trouve. On peut ainsi imbriquer plusieurs niveaux de shell les uns à l’intérieur des autres. La variable d’environnement <code>SHLVL</code> (<em>shell level</em>) permet de savoir dans quel niveau on se trouve.<br>
+La variable <code>MY_VAR</code> étant locale, elle est inconnue dans le shell fils (les variables locales ne sont pas héritées).<br>
+La commande <code>exit</code> nous ramène dans le shell père.</p>
+</li>
+<li>
+<p>On transforme la variable locale en variable d’environnement avec la commande <code>export MY_VAR</code> ; cette fois, la variable est connue dans le shell fils : les variables d’environnement sont héritées.</p>
+</li>
+<li>
+<p><code>export NOM="John Doe"</code> (attention, pas d’espace autour du signe <code>=</code> !)</p>
+</li>
+<li>
+<p><code>echo "Bonjour $NOM"</code></p>
+</li>
+<li>
+<p>Une variable (d’environnement ou de shell) vide continue d’exister en tant que telle (par exemple les variables d’environnement vides sont toujours présentes quand on tape la commande <code>env</code>) ; la commande <code>unset</code> supprime une variable de manière effective.</p>
+</li>
+<li>
+<p>Plusieurs solutions possibles :</p>
+<ul>
+<li><code>echo "\$HOME=$HOME"</code></li>
+<li><code>echo '$HOME'=$HOME</code></li>
+<li>…</li>
+</ul>
+</li>
+</ol>
+<h1 id="exercice-2---contrôle-de-mot-de-passe">Exercice 2 - Contrôle de mot de passe</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>
+<p>Instruction conditionnelle <code>if</code></p>
+</li>
+<li>
+<p>Lecture d’une valeur au clavier</p>
+</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+PASSWORD<span class="token operator">=</span><span class="token string">"secret"</span>
+
+<span class="token function">read</span> -s -p <span class="token string">"Saisissez votre mot de passe : "</span> input
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> _<span class="token variable">$input</span> <span class="token operator">==</span> _<span class="token variable">$PASSWORD</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">echo</span> -e <span class="token string">"\nVous êtes authentifié !"</span>
+<span class="token keyword">else</span>
+        <span class="token keyword">echo</span> -e <span class="token string">"\nErreur: mot de passe incorrect"</span>
+<span class="token keyword">fi</span>
+</code></pre>
+<p><strong>💡 Auto-test</strong></p>
+<ul>
+<li>
+<p>Pourquoi ajoute-t-on un caractère (par exemple <code>_</code> comme ici) avant les variables dans le <code>if</code> ?</p>
+</li>
+<li>
+<p>Quelle est l’utilité de l’option <code>-e</code> de <code>echo</code> ?</p>
+</li>
+</ul>
+<h1 id="exercice-3---expressions-rationnelles">Exercice 3 - Expressions rationnelles</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>Passage d’argument à un script</li>
+<li>Fonctions Bash</li>
+<li>Valeur de retour d’une fonction</li>
+<li>Expressions rationnelles</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">function</span> is_number<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    re<span class="token operator">=</span><span class="token string">'^[+-]?[0-9]+([.][0-9]+)?$'</span>
+
+    <span class="token keyword">if</span> <span class="token operator">!</span> <span class="token punctuation">[</span><span class="token punctuation">[</span> <span class="token variable">$1</span> <span class="token operator">=</span>~ <span class="token variable">$re</span> <span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">return</span> 1
+    <span class="token keyword">else</span>
+        <span class="token keyword">return</span> 0
+    <span class="token keyword">fi</span>
+<span class="token punctuation">}</span>
+
+is_number <span class="token variable">$1</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$?</span> -eq 0 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+    <span class="token keyword">echo</span> <span class="token string">"Le nombre est un nombre réel !"</span>
+<span class="token keyword">else</span>
+    <span class="token keyword">echo</span> <span class="token string">"Le nombre n'est pas un nombre réel !"</span>
+<span class="token keyword">fi</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<p>La fonction <code>is_number</code> renvoie 1 si le paramètre qui lui est envoyé <strong>n’est pas</strong> un réel (la condition dans le <code>if</code> vérifie si le paramètre est conforme à l’expression rationnelle, et on prend la négation de cette condition avec le symbole <code>!</code>), et 0 sinon.</p>
+<p>La négation n’est bien sûr pas utile (on pourrait l’enlever et inverser les deux <code>return</code>), elle n’avait ici qu’un but pédagogique.</p>
+<p>💡 <strong>Auto-test</strong></p>
+<ul>
+<li>
+<p>Comprendre ce que représente et comment fonctionne l’expression rationnelle <code>re</code>.</p>
+</li>
+<li>
+<p>Comprendre la différence entre <code>echo</code> et <code>return</code> pour renvoyer une valeur dans une fonction.</p>
+</li>
+<li>
+<p>A quoi correspond la variable spéciale <code>$?</code> ?</p>
+</li>
+</ul>
+<h1 id="exercice-4---contrôle-dutilisateur">Exercice 4 - Contrôle d’utilisateur</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>
+<p>Appel à une commande dans un script</p>
+</li>
+<li>
+<p>Redirections</p>
+</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token variable">$1</span> <span class="token punctuation">]</span><span class="token punctuation">;</span><span class="token keyword">then</span>
+    <span class="token keyword">echo</span> <span class="token string">"Utilisation : <span class="token variable">$0</span> nom_utilisateur"</span>
+<span class="token keyword">else</span>
+    <span class="token function">id</span> <span class="token variable">$1</span> <span class="token operator">&gt;</span> /dev/null 2<span class="token operator">&gt;</span><span class="token operator">&amp;</span>1
+
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$?</span> -eq 0 <span class="token punctuation">]</span><span class="token punctuation">;</span><span class="token keyword">then</span>
+        <span class="token keyword">echo</span> <span class="token string">"L'utilisateur <span class="token variable">$1</span> existe"</span>
+    <span class="token keyword">else</span>
+        <span class="token keyword">echo</span> <span class="token string">"L'utilisateur <span class="token variable">$1</span> n'existe pas"</span>
+    <span class="token keyword">fi</span>
+<span class="token keyword">fi</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<p>On commence par tester qu’un paramètre a bien été fourni au script (si ce n’est pas le cas, on affiche un message rappelant comment la syntaxe correcte).</p>
+<p>Si on a bien un paramètre, on l’utilise pour vérifier s’il correspond à un utilisateur existant. Pour cela on utilise la commande <code>id</code> ; comme la plupart des commandes Linux, <code>id</code> renvoie <code>0</code> si elle se termine avec succès (l’utilisateur a été trouvé) et une valeur positive en cas d’échec.</p>
+<p>Afin de ne pas “polluer” l’affichage avec les messages produits par la commande <code>id</code>, on redirige ces messages vers le fichier <code>/dev/null</code>.</p>
+<p>💡 <strong>Auto-test</strong></p>
+<ul>
+<li>
+<p>Que se passe-t-il quand on écrit dans le fichier <code>/dev/null</code> ?</p>
+</li>
+<li>
+<p>Que signifie <code>2&gt;&amp;1</code> ?</p>
+</li>
+</ul>
+<h1 id="exercice-5---factorielle">Exercice 5 - Factorielle</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>
+<p>Boucle <code>for</code></p>
+</li>
+<li>
+<p>Opérateur de calcul arithmétique</p>
+</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+factorielle<span class="token operator">=</span>1
+
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token variable"><span class="token variable">`</span><span class="token function">seq</span> 1 $1<span class="token variable">`</span></span><span class="token punctuation">;</span>
+<span class="token keyword">do</span>
+    factorielle<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>$factorielle <span class="token operator">*</span> $i<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+
+<span class="token keyword">echo</span> <span class="token string">"<span class="token variable">$1!</span> = <span class="token variable">$factorielle</span>"</span>
+</code></pre>
+<p>💡 <strong>Auto-test</strong></p>
+<ul>
+<li>Par définition, 0! = 1. Le programme ci-dessus est-il correct ?</li>
+</ul>
+<h1 id="exercice-6---juste-prix">Exercice 6 - Juste prix</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>
+<p>Nombres aléatoires</p>
+</li>
+<li>
+<p>Boucles <code>while</code>/<code>until</code></p>
+</li>
+</ul>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+nb<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span> $RANDOM  <span class="token operator">%</span>  <span class="token number">1000</span> <span class="token operator">+</span> <span class="token number">1</span> <span class="token variable">))</span></span><span class="token punctuation">;</span>
+essais<span class="token operator">=</span>0
+input<span class="token operator">=</span>0
+
+<span class="token keyword">while</span> <span class="token punctuation">[</span> <span class="token variable">$nb</span> -ne <span class="token variable">$input</span> <span class="token punctuation">]</span>
+<span class="token keyword">do</span>
+    <span class="token function">read</span> -p <span class="token string">'Tapez un nombre entre 1 et 1000 : '</span> input
+    <span class="token variable"><span class="token punctuation">((</span>essais<span class="token operator">++</span><span class="token punctuation">))</span></span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$nb</span> -gt <span class="token variable">$input</span> <span class="token punctuation">]</span><span class="token punctuation">;</span><span class="token keyword">then</span>
+        <span class="token keyword">echo</span> <span class="token string">"C'est plus grand !"</span>
+    <span class="token keyword">else</span>
+        <span class="token keyword">echo</span> <span class="token string">"C'est plus petit !"</span>
+    <span class="token keyword">fi</span>
+<span class="token keyword">done</span>
+
+<span class="token keyword">echo</span> <span class="token string">"Gagné ! Vous avez gagné en <span class="token variable">$essais</span> essais !"</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<ul>
+<li>
+<p>L’expression <code>$RANDOM % n</code> renvoie un nombre aléatoire dans l’intervalle [0; n-1]. Donc on ajoute 1 pour obtenir un nombre dans l’intervalle [1 ; n].</p>
+</li>
+<li>
+<p>Le nombre d’essais est incrémenté à chaque tentative ; c’est pourquoi on initialise la variable <code>essais</code> à 0.</p>
+</li>
+<li>
+<p>Pour être certain de rentrer au moins une fois dans le <code>while</code>, la condition <code>$nb -ne $input</code> ne doit pas être vérifiée. Puisque <code>1 &lt;= nb &lt;= 1000</code>, on peut initialiser <code>input</code> à 0.</p>
+</li>
+</ul>
+<p>📝 <strong>Remarque</strong></p>
+<p>Il existe en Bash la boucle <code>until</code> : elle fonctionne exactement comme la boucle <code>until</code> mais sur la condition contraire. Ici, on aurait donc plus remplacer <code>while [ nb -ne input ]</code> par <code>until [ nb -eq input ]</code>.</p>
+<h1 id="exercice-7---statistiques">Exercice 7 - Statistiques</h1>
+<p>💡 <strong>Notions abordées</strong></p>
+<ul>
+<li>
+<p>Synthèse de tout ce qui précède</p>
+</li>
+<li>
+<p>Déréférencement de variable</p>
+</li>
+<li>
+<p>Tableaux</p>
+</li>
+<li>
+<p>Instruction <code>exit</code></p>
+</li>
+</ul>
+<p>📝 <strong>Remarque</strong></p>
+<p>Pour cet exercice en particulier, les solutions proposées sont <em>des</em> solutions parmi beaucoup d’autres !</p>
+<h3 id="question-1">Question 1</h3>
+<p>Une première version, volontairement pas la plus simple, sans le test de validité des paramètres :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+min<span class="token operator">=</span>101
+max<span class="token operator">=</span>-101
+somme<span class="token operator">=</span>0
+
+<span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token variable"><span class="token variable">`</span><span class="token function">seq</span> 1 3<span class="token variable">`</span></span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">${!i}</span> -lt <span class="token variable">$min</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> min<span class="token operator">=</span><span class="token variable">${!i}</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">${!i}</span> -gt <span class="token variable">$max</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> max<span class="token operator">=</span><span class="token variable">${!i}</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    somme<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">+</span> ${<span class="token operator">!</span>i}<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+
+<span class="token keyword">echo</span> <span class="token string">"Le nombre minimum est <span class="token variable">$min</span>, le max est <span class="token variable">$max</span> et la moyenne est <span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">/</span> <span class="token number">3</span><span class="token variable">))</span></span>"</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<ul>
+<li>
+<p>La boucle <code>for</code> écrite ici est l’équivalente de la boucle <code>for(int i = 1; i &lt;= 3; i++)</code> qu’on aurait pu rencontrer dans d’autres langages, comme C ou Java.</p>
+</li>
+<li>
+<p>L’expression <code>$i</code> renvoie la valeur de <code>i</code> et non la valeur du <em>i-ème paramètre</em>. C’est pourquoi on doit <em>déréférencer</em> la variable <code>i</code>.</p>
+</li>
+</ul>
+<h4 id="test-de-validité-des-paramètres">Test de validité des paramètres</h4>
+<p>Pour tester la validité des paramètres, on peut commencer par écrire une fonction qui teste la validité d’<strong>un</strong> paramètre. Par exemple :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token keyword">function</span> verifParam<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token variable">$1</span> <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token operator">!</span> <span class="token punctuation">[</span><span class="token punctuation">[</span> <span class="token variable">$1</span> <span class="token operator">=</span>~ ^-?<span class="token punctuation">[</span>0-9<span class="token punctuation">]</span>+$ <span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -lt -100 <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -gt 100 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">return</span> 1
+    <span class="token keyword">else</span>
+        <span class="token keyword">return</span> 0
+    <span class="token keyword">fi</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<ol>
+<li>
+<p>Cette fonction commence par tester que le paramètre n’est pas nul</p>
+</li>
+<li>
+<p>Ensuite elle vérifie si la valeur de ce paramètre est un nombre entier, à l’aide de l’expression rationnelle indiquée (c’est une version simplifiée de l’expression de l’exercice 3, qui ne tient pas compte de la partie décimale)</p>
+</li>
+<li>
+<p>Enfin, elle teste si cet entier ce trouve bien dans l’intervalle attendu</p>
+</li>
+</ol>
+<p>Si l’un de ces tests échoue, la fonction renvoie le code d’erreur 1. En cas de succès, comme d’habitude, elle renvoie 0.</p>
+<p>Pour tester <strong>tous</strong> les paramètres, comme ici on n’en a que trois, on pourrait éventuellement se contenter de la fonction suivante :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token keyword">function</span> verifTousParams<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token operator">!</span> verifParam <span class="token variable">$1</span>  <span class="token operator">||</span> <span class="token operator">!</span> verifParam <span class="token variable">$2</span>  <span class="token operator">||</span> <span class="token operator">!</span> verifParam <span class="token variable">$3</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">echo</span> <span class="token string">"Les 3 paramètres doivent être compris entre -100 et 100 !"</span>
+        <span class="token keyword">exit</span> 1
+    <span class="token keyword">fi</span>
+<span class="token punctuation">}</span>
+
+verifTousParams <span class="token variable">$1</span> <span class="token variable">$2</span> <span class="token variable">$3</span>
+</code></pre>
+<p>💡 <strong>Auto-test</strong></p>
+<p>Il est important de bien comprendre que la notation des paramètres :</p>
+<ul>
+<li>
+<p>La fonction <code>verifTousParams</code> est appelée avec <strong>trois</strong> paramètres ; à l’intérieur de cette fonction, les valeurs de ces paramètres sont identifiées respectivement par <code>$1</code>, <code>$2</code> et <code>$3</code></p>
+</li>
+<li>
+<p>Ces trois paramètres sont donnés <strong>successivement</strong> à la fonction <code>verifParam</code> qui, elle, n’attend qu’<strong>un seul</strong> paramètre. Donc, <strong>quel que soit le paramètre qu’on lui transmet</strong>, sa valeur sera toujours identifiée par <code>$1</code> dans cette fonction.</p>
+</li>
+<li>
+<p>Quelle est la différence entre <code>return 1</code> et <code>exit 1</code> ?</p>
+</li>
+</ul>
+<h3 id="question-2">Question 2</h3>
+<p>La version précédente a un problème majeure : elle n’est pas générique ; le nombre de paramètres (3), est présent plusieurs fois en dur, et il est donc impossible d’utiliser ce programme avec deux valeurs ou avec dix valeurs.</p>
+<p>On peut résoudre ce problème très simplement, en itérant sur la <em>liste des paramètres</em> (ce qu’on aurait d’ailleurs déjà pu faire à la question précédente, mais la solution proposée avait l’intérêt pédagogique d’illustrer le déréférencement). La boucle <code>for</code> devient ainsi :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token keyword">for</span> param <span class="token keyword">in</span> <span class="token variable">$*</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -lt <span class="token variable">$min</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> min<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -gt <span class="token variable">$max</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> max<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    somme<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">+</span> $param<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+
+
+<span class="token keyword">echo</span> <span class="token string">"Le nombre minimum est <span class="token variable">$min</span>, le max est <span class="token variable">$max</span> et la moyenne est <span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">/</span> $#<span class="token variable">))</span></span>"</span>
+</code></pre>
+<p>⚠️ Ce programme présente désormais un bug potentiel ! Comme on divise la somme par le nombre de paramètre, le script peut planter si on l’appelle sans paramètre (division par 0). On corrige ce problème en rajoutant un test avant de rentrer dans la boucle :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token keyword">if</span> <span class="token punctuation">[</span> $<span class="token comment"># -eq 0 ]; then</span>
+   <span class="token keyword">echo</span> <span class="token string">"Utilisation: <span class="token variable">$0</span> nb1 [nb2...]"</span>
+   <span class="token keyword">exit</span> 1
+<span class="token keyword">fi</span>
+</code></pre>
+<p>L’autre problème est qu’on ne peut plus utiliser la fonction <code>verifTousParams</code>, qui fonctionnait avec trois paramètres. En réalité, on peut complètement se passer de cette fonction : il suffit d’appeler “nous-mêmes” la fonction <code>verifParam</code>. Ce qui était d’abord un problème devient ainsi un avantage, car on a un code plus concis.</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token keyword">for</span> param <span class="token keyword">in</span> <span class="token variable">$*</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+    verifParam <span class="token variable">$param</span>  <span class="token comment"># &lt;== on teste la validité du paramètre courant</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -lt <span class="token variable">$min</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> min<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -gt <span class="token variable">$max</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> max<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    somme<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">+</span> $param<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+</code></pre>
+<p>💡 La logique entre les deux solutions est légèrement différente :</p>
+<ul>
+<li>
+<p>auparavant, on testait la validité de <strong>tous</strong> les paramètres <strong>avant</strong> d’effectuer les calculs</p>
+</li>
+<li>
+<p>ici, on teste la validité de chaque paramètre <strong>au fur et à mesure</strong> des calculs.</p>
+</li>
+</ul>
+<p>⚠️ Dans le cas présent, cette deuxième solution ne pose pas de problème car les calculs à effectuer sont très rapides. Mais dans le cas de calculs très longs, il vaut mieux s’assurer de la validité de tous les paramètres avant de démarrer les calculs !!! Dans ce cas, la meilleure solution serait de conserver la fonction <code>verifTousParams</code> mais en y insérant une boucle qui teste <strong>tous</strong> les paramètres.</p>
+<p>La solution complète :</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">function</span> verifParam<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token variable">$1</span> <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token operator">!</span> <span class="token punctuation">[</span><span class="token punctuation">[</span> <span class="token variable">$1</span> <span class="token operator">=</span>~ ^-?<span class="token punctuation">[</span>0-9<span class="token punctuation">]</span>+$ <span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -lt -100 <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -gt 100 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">echo</span> <span class="token string">"Les paramètres doivent être compris entre -100 et 100 !"</span>
+        <span class="token keyword">exit</span> 1
+    <span class="token keyword">fi</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> $<span class="token comment"># -eq 0 ]; then</span>
+   <span class="token keyword">echo</span> <span class="token string">"Utilisation: <span class="token variable">$0</span> nb1 [nb2...]"</span>
+   <span class="token keyword">exit</span> 1
+<span class="token keyword">fi</span>
+
+min<span class="token operator">=</span>101
+max<span class="token operator">=</span>-101
+somme<span class="token operator">=</span>0
+
+<span class="token keyword">for</span> param <span class="token keyword">in</span> <span class="token variable">$*</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+    verifParam <span class="token variable">$param</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -lt <span class="token variable">$min</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> min<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$param</span> -gt <span class="token variable">$max</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> max<span class="token operator">=</span><span class="token variable">$param</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    somme<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">+</span> $param<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+
+
+<span class="token keyword">echo</span> <span class="token string">"Le nombre minimum est <span class="token variable">$min</span>, le max est <span class="token variable">$max</span> et la moyenne est <span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">/</span> $#<span class="token variable">))</span></span>"</span>
+</code></pre>
+<h3 id="question-3">Question 3</h3>
+<p>Ici, les valeurs ne sont plus données en paramètres mais saisies au fur et à mesure et stockées dans un tableau (bien qu’on puisse s’en passer ici, l’idée de l’exercice était d’aborder les tableaux Bash).</p>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">function</span> verifParam<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> -z <span class="token variable">$1</span> <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token operator">!</span> <span class="token punctuation">[</span><span class="token punctuation">[</span> <span class="token variable">$1</span> <span class="token operator">=</span>~ ^-?<span class="token punctuation">[</span>0-9<span class="token punctuation">]</span>+$ <span class="token punctuation">]</span><span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -lt -100 <span class="token punctuation">]</span> <span class="token operator">||</span> <span class="token punctuation">[</span> <span class="token variable">$1</span> -gt 100 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">echo</span> <span class="token string">"Les paramètres doivent être compris entre -100 et 100 !"</span>
+        <span class="token keyword">return</span> 1
+    <span class="token keyword">fi</span>
+<span class="token punctuation">}</span>
+
+val<span class="token operator">=</span>0
+tab<span class="token operator">=</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">while</span> <span class="token punctuation">[</span> <span class="token variable">$val</span> <span class="token operator">!=</span> <span class="token string">'q'</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+    <span class="token function">read</span> -p <span class="token string">"Saisissez un nombre entre -100 et 100, ou 'q' pour arrêter la saisie : "</span> val
+
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$val</span> <span class="token operator">!=</span> <span class="token string">'q'</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        verifParam <span class="token variable">$val</span>
+        <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$?</span> -eq 0 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+            tab<span class="token punctuation">[</span><span class="token variable">${#tab[@]}</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token variable">$val</span>
+        <span class="token keyword">fi</span>
+    <span class="token keyword">fi</span>
+<span class="token keyword">done</span><span class="token punctuation">;</span>
+
+min<span class="token operator">=</span>101
+max<span class="token operator">=</span>-101
+somme<span class="token operator">=</span>0
+
+<span class="token keyword">for</span> val <span class="token keyword">in</span> <span class="token variable">${tab[*]}</span>
+<span class="token keyword">do</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$val</span> -lt <span class="token variable">$min</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> min<span class="token operator">=</span><span class="token variable">$val</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$val</span> -gt <span class="token variable">$max</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> max<span class="token operator">=</span><span class="token variable">$val</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    somme<span class="token operator">=</span><span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">+</span> $val<span class="token variable">))</span></span>
+<span class="token keyword">done</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">${#tab[@]}</span> -gt 0 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+    <span class="token keyword">echo</span> <span class="token string">"Valeurs saisies : <span class="token variable">${tab[*]}</span>"</span>
+    <span class="token keyword">echo</span> <span class="token string">"Le nombre minimum est <span class="token variable">$min</span>, le max est <span class="token variable">$max</span> et la moyenne est <span class="token variable"><span class="token variable">$((</span>somme <span class="token operator">/</span> ${#tab[@]}<span class="token variable">))</span></span>"</span>
+<span class="token keyword">fi</span>
+</code></pre>
+<p>💡 <strong>Explications</strong></p>
+<p>j’ai légèrement changé la logique du programme :</p>
+<ul>
+<li>
+<p>les valeurs sont d’abord toutes stockées dans le tableau avant de lancer les calculs</p>
+</li>
+<li>
+<p>le programme ne s’arrête plus quand on saisie une mauvaise valeur, elle n’est juste pas stockée dans le tableau (d’où le remplacement de <code>exit 1</code> par <code>return 1</code> dans la fonction).</p>
+</li>
+</ul>
+<h1 id="exercice-8">Exercice 8</h1>
+<pre class=" language-bash"><code class="prism  language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">echo</span> -n <span class="token string">"FG \ BG   "</span>
+
+<span class="token comment"># Couleur du texte</span>
+<span class="token keyword">for</span> clfg <span class="token keyword">in</span> <span class="token punctuation">{</span>0<span class="token punctuation">..</span>7<span class="token punctuation">}</span> <span class="token punctuation">{</span>30<span class="token punctuation">..</span>37<span class="token punctuation">}</span> <span class="token punctuation">;</span> <span class="token keyword">do</span>
+<span class="token comment">#for clfg in 0 1 4 5 7 {30..37} ; do</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$clfg</span> -ne 0 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span> <span class="token keyword">echo</span> -en <span class="token string">"<span class="token variable">$clfg</span>\t"</span><span class="token punctuation">;</span> <span class="token keyword">fi</span>
+    <span class="token comment"># Couleur de fond</span>
+    <span class="token keyword">for</span> clbg <span class="token keyword">in</span> <span class="token punctuation">{</span>40<span class="token punctuation">..</span>47<span class="token punctuation">}</span><span class="token punctuation">;</span> <span class="token keyword">do</span>
+        <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token variable">$clfg</span> -eq 0 <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+            <span class="token keyword">echo</span> -n <span class="token string">"<span class="token variable">$clbg</span>    "</span><span class="token punctuation">;</span>
+        <span class="token keyword">else</span>
+            <span class="token keyword">echo</span> -en <span class="token string">"\e[<span class="token variable">${clbg}</span>;<span class="token variable">${clfg}</span>m Bash \e[0m"</span>
+        <span class="token keyword">fi</span>
+    <span class="token keyword">done</span>
+    <span class="token keyword">echo</span> <span class="token comment">#Newline</span>
+<span class="token keyword">done</span>
+</code></pre>
+</div>
+
+
+
+</body></html>
