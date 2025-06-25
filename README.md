@@ -37,9 +37,3 @@ Ce projet Python permet de décoder des phrases chiffrées à l'aide d'un dictio
 
 - Python 3.x
 - Tkinter (inclus dans la plupart des distributions Python)
-
-## Exemple de commande
-
-```sh
-python [Data_up.py](http://_vscodecontentref_/0)
-python [decodeur.py](http://_vscodecontentref_/1)
